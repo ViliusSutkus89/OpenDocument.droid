@@ -9,6 +9,7 @@ import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -54,6 +55,9 @@ public class OnlineLoader extends FileLoader {
     };
     private static final String[] MIME_BLACKLIST = {"image/x-tga", "image/vnd.djvu", "image/g3fax", "audio/amr", "text/calendar", "text/vcard", "video/3gpp"};
 
+    public static final String GOOGLE_VIEWER_URL = "https://docs.google.com/viewer?embedded=true&url=";
+    public static final String MICROSOFT_VIEWER_URL = "https://view.officeapps.live.com/op/view.aspx?src=";
+
     private StorageReference storage;
     private FirebaseAuth auth;
 
@@ -69,7 +73,7 @@ public class OnlineLoader extends FileLoader {
             storage = FirebaseStorage.getInstance().getReference();
             auth = FirebaseAuth.getInstance();
         } catch (Throwable e) {
-            e.printStackTrace();
+            crashManager.log(e);
         }
 
     }
@@ -122,17 +126,29 @@ public class OnlineLoader extends FileLoader {
                 currentUserId = authenticationTask.getResult().getUser().getUid();
             }
 
+            StorageMetadata.Builder metadataBuilder = new StorageMetadata.Builder();
+            if (!"N/A".equals(options.fileType)) {
+                metadataBuilder.setContentType(options.fileType);
+            }
+
             StorageReference reference = storage.child("uploads/" + currentUserId + "/" + UUID.randomUUID() + "." + options.fileExtension);
-            UploadTask uploadTask = reference.putFile(options.cacheUri);
-            //uploadTask.addOnProgressListener(this);
+            UploadTask uploadTask = reference.putFile(options.cacheUri, metadataBuilder.build());
             Tasks.await(uploadTask);
 
             if (uploadTask.isSuccessful()) {
                 Task<Uri> urlTask = reference.getDownloadUrl();
                 Tasks.await(urlTask);
 
+                String viewerUrl;
+                if (options.fileType.contains("vnd.oasis.opendocument")) {
+                    viewerUrl = MICROSOFT_VIEWER_URL;
+                } else {
+                    // ODF does not seem to be supported by google docs viewer
+                    viewerUrl = GOOGLE_VIEWER_URL;
+                }
+
                 String downloadUrl = urlTask.getResult().toString();
-                Uri viewerUri = Uri.parse("https://docs.google.com/viewer?embedded=true&url="
+                Uri viewerUri = Uri.parse(viewerUrl
                         + URLEncoder.encode(downloadUrl, StreamUtil.ENCODING));
 
                 result.partTitles.add(null);
@@ -143,8 +159,6 @@ public class OnlineLoader extends FileLoader {
                 throw new RuntimeException("server couldn't handle request");
             }
         } catch (Throwable e) {
-            e.printStackTrace();
-
             callOnError(result, e);
         }
     }

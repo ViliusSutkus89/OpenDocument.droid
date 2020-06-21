@@ -3,17 +3,9 @@
         xmlns:tools="http://schemas.android.com/tools"
         package="at.tomtasche.reader"
         android:installLocation="auto"
-        android:versionCode="117"
-        android:versionName="3.1.8"
+        android:versionCode="132"
+        android:versionName="3.3.2"
         tools:ignore="GoogleAppIndexingWarning">
-
-    <!-- added by HelpCrunch SDK otherwise -->
-    <uses-feature
-            android:name="android.hardware.camera.autofocus"
-            tools:node="remove" />
-    <uses-feature
-            android:name="android.hardware.camera.any"
-            tools:node="remove" />
 
     <uses-permission
             android:name="android.permission.CAMERA"
@@ -342,6 +334,7 @@
 
         <activity
                 android:name="com.nononsenseapps.filepicker.FilePickerActivity"
+                android:enabled="@bool/filepicker_enabled"
                 android:icon="@mipmap/icon"
                 android:roundIcon="@mipmap/icon_round"
                 android:excludeFromRecents="true"
@@ -381,6 +374,7 @@
 
         <provider
                 android:name="androidx.core.content.FileProvider"
+                android:enabled="@bool/filepicker_enabled"
                 android:authorities="${applicationId}.provider"
                 android:exported="false"
                 android:grantUriPermissions="true">
