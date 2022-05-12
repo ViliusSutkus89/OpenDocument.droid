@@ -13,6 +13,7 @@ on:
 
 jobs:
   build:
+    if: false
     runs-on: ubuntu-20.04
 
     steps:
@@ -62,22 +63,26 @@ jobs:
       # Make sure the matrix here and in cache_AVD_images.yml is the same
       matrix:
         include:
-          # Oldest version we support
           - arch: x86
-            api-level: 19
-          # Oldest x86_64
-          - arch: x86_64
-            api-level: 21
-          # API diff between 21 and 30 is too big.
-          # Need to know if test breaking change was old API or new.
+            api-level: 26
+          - arch: x86
+            api-level: 27
+          - arch: x86
+            api-level: 28
+          - arch: x86
+            api-level: 29
+
           - arch: x86_64
             api-level: 25
-          # Newest x86
-          - arch: x86
-            api-level: 30
-          # Newest in general
           - arch: x86_64
-            api-level: 32
+            api-level: 26
+          - arch: x86_64
+            api-level: 27
+          - arch: x86_64
+            api-level: 28
+          - arch: x86_64
+            api-level: 29
+
     steps:
     - name: checkout
       uses: actions/checkout@v3
